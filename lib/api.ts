@@ -354,6 +354,24 @@ export const leadsApi = {
 
     return log;
   },
+  bulkCreate: async (leads: Partial<Lead>[], user: AuthContext): Promise<Lead[]> => {
+    // Check authorization
+    if (!canCreateRecord(user)) {
+      throw new AuthorizationError(403, 'Lead creation not authorized for this role');
+    }
+
+    const validLeads = leads.filter(l => l.first_name && l.email && l.company);
+    const newLeads: Lead[] = validLeads.map(lead => ({
+      ...lead,
+      id: String(Date.now() + Math.random() * 10000),
+      status: lead.status || 'new',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }));
+
+    dataStore.leads.push(...newLeads);
+    return newLeads;
+  },
 };
 
 // Lead Assignment Logs API
